@@ -116,3 +116,22 @@ Goals:
 - Data platform design
 
 Avoid premature implementation.
+
+---
+
+## Task routing
+
+Subagents live in `.claude/agents/`: `scout` (haiku), `implementer` (sonnet), `architect` (opus).
+
+The main session is the judgment layer and runs on Opus (set in `.claude/settings.json`). It plans, routes, reviews child output and makes the final call; it does not do bulk work.
+
+- For any task touching 3+ files or with separable parts, first write a short plan that splits it into independent subtasks.
+- Spawn independent subtasks in parallel, in a single turn. Run dependent ones sequentially.
+- Difficulty rubric:
+  - Easy (lookup, grep, summarize, single-file mechanical change) -> `scout`
+  - Medium (clear spec, known pattern, tests exist or are easy to write) -> `implementer`
+  - Hard (ambiguous requirements, architecture, concurrency, security, data migrations, bug with unknown cause) -> `architect`
+- When unsure, pick the cheaper tier first and escalate one tier if the result is incomplete or tests fail.
+- Give every child a self-contained brief: goal, relevant paths, constraints, expected output format.
+- The main session only plans, delegates, and integrates results. It doesn't do bulk work itself.
+- After children finish, review their outputs and run tests before reporting done.
